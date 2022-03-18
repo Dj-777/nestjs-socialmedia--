@@ -6,7 +6,9 @@ import { AppService } from './app.service';
 import { User } from './users/user.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-const entities = [User];
+import { ReqRes } from './users/reqres.entity';
+import { Chat } from './users/userchats.entity';
+const entities = [User,ReqRes,Chat];
 @Module({
   imports: [
     ConfigModule.forRoot({

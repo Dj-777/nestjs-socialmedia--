@@ -10,7 +10,13 @@ import {
 import { CreateUserDto } from 'src/users/dto/user.dto';
 import { AuthService } from './auth.service';
 import { AuthLoginDto } from './dto/auth-login.dto';
+import { authResetPasswordDto } from './dto/auth-resetpassword.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import * as bcrypt from "bcrypt"
+import { JwtStrategy } from './jwt.strategy';
+import { User } from 'src/users/user.entity';
+import {  ReqResDto } from 'src/users/dto/reqres.dto';
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -21,13 +27,42 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async test() {
-    return 'You are succesfully login';
+  async test() {   
+  return 'token is correct'
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  async updatepass(@Param('id') id, @Body() CreateUserDto: CreateUserDto) {
-    return this.authService.update(id, CreateUserDto);
+  @UseGuards(JwtStrategy)
+  @Patch('resetpassword/:id')
+  async updatepass(@Param('id') id,@Body() authResetPasswordDtos:authResetPasswordDto) {
+     return await this.authService.resetpassword(id,authResetPasswordDtos); 
   }
+  
+  @UseGuards(JwtStrategy)
+  @UseGuards(JwtAuthGuard)
+  @Get('searchmember')
+  async allmemeber()
+  {
+    return await this.authService.showallmember();
+  }
+
+
+
+  @Post('sendrequest/:senderemail/:reciveremail')
+  async sendRequest(@Param('senderemail') senderemail:string,@Param('reciveremail')reciveremail:string ,@Body() reqresdto:ReqResDto){
+    return await this.authService.request(senderemail,reciveremail,reqresdto);
+  }
+
+  @Get('showrequest/:email')
+  async showRequest(@Param('email') email:string, @Body() reqresdto:ReqResDto){
+    return await this.authService.showRequest(email,reqresdto)
+  }
+
+  @Patch('requeststatus/:senderemail/:reciveremail')
+  async requestStaus(@Param('senderemail')senderemail:string,@Param('reciveremail') reciveremail:string,@Body() reqresdto:ReqResDto){
+    return await this.authService.requestStatus(senderemail,reciveremail,reqresdto)
+  }
+
+
+ 
 }
