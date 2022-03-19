@@ -49,8 +49,8 @@ export class AuthController {
 
 
   @Post('sendrequest/:senderemail/:reciveremail')
-  async sendRequest(@Param('senderemail') senderemail:string,@Param('reciveremail')reciveremail:string ,@Body() reqresdto:ReqResDto){
-    return await this.authService.request(senderemail,reciveremail,reqresdto);
+  async sendRequest(@Param('senderemail') senderemail:string,@Param('reciveremail')reciveremail:string ){
+    return await this.authService.request(senderemail,reciveremail);
   }
 
   @Get('showrequest/:email')
@@ -58,9 +58,9 @@ export class AuthController {
     return await this.authService.showRequest(email,reqresdto)
   }
 
-  @Patch('requeststatus/:senderemail/:reciveremail')
-  async requestStaus(@Param('senderemail')senderemail:string,@Param('reciveremail') reciveremail:string,@Body() reqresdto:ReqResDto){
-    return await this.authService.requestStatus(senderemail,reciveremail,reqresdto)
+  @Patch('requeststatus/:reciveremail/')
+  async requestStaus(@Param('reciveremail') reciveremail:string,@Body() reqresdto:ReqResDto){
+    return await this.authService.requestStatus(reciveremail,reqresdto)
   }
 
 
