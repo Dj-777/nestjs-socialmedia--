@@ -42,13 +42,6 @@ export class AuthController {
   }
 
 
-
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  async test() {   
-  return 'token is correct'
-  }
-
  
   @Patch('resetpassword/:email')
   async updatepass(@Param('email') email:string,@Body() authResetPasswordDtos:authResetPasswordDto) {
@@ -57,10 +50,10 @@ export class AuthController {
   
   @UseGuards(JwtStrategy)
   @UseGuards(JwtAuthGuard)
-  @Get('searchmember')
-  async allmemeber()
+  @Get('searchmember/:emails')
+  async allmemeber(@Param('emails') emails:string)
   {
-    return await this.authService.showallmember();
+    return await this.authService.showallmember(emails);
   }
 
 

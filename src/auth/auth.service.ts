@@ -40,7 +40,7 @@ export class AuthService {
         })
         .execute();
       return {
-        Yourdata: `${authLoginDto.email} and ${authLoginDto.password} and Access Token Is`,
+        Yourdata: `${authLoginDto.email} and ${authLoginDto.password} and Access Token Is Needed For Reseting Password`,
         access_token: access_Token,
       };
     }
@@ -56,35 +56,35 @@ export class AuthService {
   }
 
   //FORGETPASSWORD
-  
+
   //GETFORGETPASSWORDTOKEN
   async getforgetpasswordtoken(email: string) {
-    
-      const payload = { email };
-      const access_Token = this.jwtService.sign(payload);
-      const saveusertoforgetpassword = await getConnection()
-        .createQueryBuilder()
-        .insert()
-        .into(ForgetPassword)
-        .values({
-          email:email,
-          access_token: access_Token
-        })
-        .execute();
-      return {
-        Message: `${email} You Have To Use Access_Token For Forget-Password Your Access Token Access Token Is`,
-        Access_Token: access_Token,
-      };
+
+    const payload = { email };
+    const access_Token = this.jwtService.sign(payload);
+    const saveusertoforgetpassword = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(ForgetPassword)
+      .values({
+        email: email,
+        access_token: access_Token
+      })
+      .execute();
+    return {
+      Message: `${email} You Have To Use Access_Token For Forget-Password Your Access Token Access Token Is`,
+      Access_Token: access_Token,
+    };
   }
   //GETFORGETPASSWORDTOKEN
 
 
   //FORGETPASSWORD
-  async forgetpassword(email:string,authResetPasswordDto:authResetPasswordDto){
+  async forgetpassword(email: string, authResetPasswordDto: authResetPasswordDto) {
     if (await ForgetPassword.findOne({ where: { email: email } }) && await ForgetPassword.findOne({ where: { access_token: authResetPasswordDto.access_token } })) {
-      
+
       const hashPassword = await bcrypt.hash(authResetPasswordDto.password, 8)
-     
+
       const updatepassword = await getConnection()
         .createQueryBuilder()
         .update(User)
@@ -93,21 +93,20 @@ export class AuthService {
         })
         .where("email=:email", { email: email })
         .execute();
-     
-       
-        const deleteaccesstoken=await getConnection()
+
+
+      const deleteaccesstoken = await getConnection()
         .createQueryBuilder()
         .delete()
         .from(ForgetPassword)
         .where("email = :email", { email: email })
-        .andWhere("access_token = :access_token",{ access_token:authResetPasswordDto.access_token })
+        .andWhere("access_token = :access_token", { access_token: authResetPasswordDto.access_token })
         .execute();
-     
-        return { Message: `${email} Your Password Is Sucessfully Updated` };
+
+      return { Message: `${email} Your Password Is Sucessfully Updated` };
 
     }
-    else
-    {
+    else {
       return `${email} Please Enter valid Access_Token`
     }
   }
@@ -171,13 +170,19 @@ export class AuthService {
 
 
   //SEARCH USERS IN TABLE
-  async showallmember() {
-    const selectemails = await getConnection()
-      .createQueryBuilder()
+  async showallmember(emails:string) {
+    
+    if (await LogInUsers.findOne({ where: { email: emails } })){
+      const selectemails = await getConnection()
+       .createQueryBuilder()
       .select("User.email")
       .from(User, "User")
       .getMany();
-    return selectemails;
+      return selectemails;
+    }
+    else{
+      return "You Must Have To Login First";
+    }  
   }
   //SEARCH USERS IN TABLE
 
