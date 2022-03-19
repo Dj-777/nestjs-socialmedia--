@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -20,10 +21,27 @@ import {  ReqResDto } from 'src/users/dto/reqres.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  @Post()
+  @Post('login')
   async login(@Body() authLoginDto: AuthLoginDto) {
     return this.authService.login(authLoginDto);
   }
+  
+  @Delete('logout/:email')
+  async logout(@Param('email') email:string){
+    return await this.authService.logout(email);
+  }
+
+  @Get('getforgetpasswordtoken/:email')
+  async gettoken(@Param('email') email:string){
+    return await this.authService.getforgetpasswordtoken(email);
+  }
+
+  @Post('forgetpassword/:email')
+  async forgetpassword(@Param('email') email:string,@Body() authResetPasswordDto:authResetPasswordDto){
+    return this.authService.forgetpassword(email,authResetPasswordDto)
+  }
+
+
 
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -31,11 +49,10 @@ export class AuthController {
   return 'token is correct'
   }
 
-  @UseGuards(JwtAuthGuard)
-  @UseGuards(JwtStrategy)
-  @Patch('resetpassword/:id')
-  async updatepass(@Param('id') id,@Body() authResetPasswordDtos:authResetPasswordDto) {
-     return await this.authService.resetpassword(id,authResetPasswordDtos); 
+ 
+  @Patch('resetpassword/:email')
+  async updatepass(@Param('email') email:string,@Body() authResetPasswordDtos:authResetPasswordDto) {
+     return await this.authService.resetpassword(email,authResetPasswordDtos); 
   }
   
   @UseGuards(JwtStrategy)

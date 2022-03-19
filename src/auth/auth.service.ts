@@ -10,6 +10,8 @@ import { ReqRes, Statuss } from 'src/users/reqres.entity';
 import { ReqResDto } from 'src/users/dto/reqres.dto';
 import console from 'console';
 import e from 'express';
+import { LogInUsers } from 'src/users/loginusersdetails.entity';
+import { ForgetPassword } from 'src/users/forgetpassword.entity';
 
 @Injectable()
 export class AuthService {
@@ -19,14 +21,32 @@ export class AuthService {
   ) { }
 
   async login(authLoginDto: AuthLoginDto) {
+
     const user = await this.validateUser(authLoginDto);
     const payload = `${user.email},${user.id}`
-   const access_Token=this.jwtService.sign(payload)
-    return {
-      access_token: access_Token,
-    };
+    const access_Token = this.jwtService.sign(payload)
+    if (await LogInUsers.findOne({ where: { email: authLoginDto.email } })) {
+      return 'You Are Already Loged Into System Please Make Sure You Logout First Before Login Again'
+    }
+    else {
+      const saveusertologin = await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(LogInUsers)
+        .values({
+          email: authLoginDto.email,
+          password: authLoginDto.password,
+          access_token: access_Token
+        })
+        .execute();
+      return {
+        Yourdata: `${authLoginDto.email} and ${authLoginDto.password} and Access Token Is`,
+        access_token: access_Token,
+      };
+    }
   }
   async validateUser(authLoginDto: AuthLoginDto): Promise<User> {
+
     const { email, password } = authLoginDto;
     const user = await User.findOne({ where: { email: email } });
     if (!(await user?.validatePassword(password))) {
@@ -35,24 +55,118 @@ export class AuthService {
     return user;
   }
 
-  //SHOW USER BY ACCESS TOKEN
+  //FORGETPASSWORD
   
+  //GETFORGETPASSWORDTOKEN
+  async getforgetpasswordtoken(email: string) {
+    
+      const payload = { email };
+      const access_Token = this.jwtService.sign(payload);
+      const saveusertoforgetpassword = await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(ForgetPassword)
+        .values({
+          email:email,
+          access_token: access_Token
+        })
+        .execute();
+      return {
+        Message: `${email} You Have To Use Access_Token For Forget-Password Your Access Token Access Token Is`,
+        Access_Token: access_Token,
+      };
+  }
+  //GETFORGETPASSWORDTOKEN
 
 
-  //RESET PASSWORD
-  async resetpassword(id: number, authResetPasswordDtos: authResetPasswordDto) {
-    const user = await User.findOne(id)
-    if (user) {
-      const hashPassword = await bcrypt.hash(authResetPasswordDtos.password, 8)
-      const djj = { ...authResetPasswordDtos, password: hashPassword };
-      await User.update(id, djj);
-      return hashPassword;
+  //FORGETPASSWORD
+  async forgetpassword(email:string,authResetPasswordDto:authResetPasswordDto){
+    if (await ForgetPassword.findOne({ where: { email: email } }) && await ForgetPassword.findOne({ where: { access_token: authResetPasswordDto.access_token } })) {
+      
+      const hashPassword = await bcrypt.hash(authResetPasswordDto.password, 8)
+     
+      const updatepassword = await getConnection()
+        .createQueryBuilder()
+        .update(User)
+        .set({
+          password: hashPassword
+        })
+        .where("email=:email", { email: email })
+        .execute();
+     
+       
+        const deleteaccesstoken=await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(ForgetPassword)
+        .where("email = :email", { email: email })
+        .andWhere("access_token = :access_token",{ access_token:authResetPasswordDto.access_token })
+        .execute();
+     
+        return { Message: `${email} Your Password Is Sucessfully Updated` };
+
     }
-    else {
-      return "user not found"
+    else
+    {
+      return `${email} Please Enter valid Access_Token`
     }
   }
+  //FORGETPASSWORD
+
+
+  //FORGETPASSWORD
+
+
+
+
+  //LOGOUT
+  async logout(email: string) {
+    if (await LogInUsers.findOne({ where: { email: email } })) {
+      const logoutuser = await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(LogInUsers)
+        .where("email = :email", { email: email })
+        .execute();
+      return `${email} You are Logedout Successfully From System`
+    }
+    else {
+      return "Make Sure You are Login First"
+    }
+  }
+
+  //LOGOUT
+
+
   //RESET PASSWORD
+  async resetpassword(email: string, authResetPasswordDtos: authResetPasswordDto) {
+
+    if (await LogInUsers.findOne({ where: { email: email } })) {
+
+      const user = await User.findOne({ where: { email: email } })
+      if (user) {
+        const hashPassword = await bcrypt.hash(authResetPasswordDtos.password, 8)
+
+        const updatepassword = await getConnection()
+          .createQueryBuilder()
+          .update(User)
+          .set({
+            password: hashPassword
+          })
+          .where("email=:email", { email: email })
+          .execute();
+        return { Message: `${email} Your Password Is Sucessfully Updated` };
+      }
+    }
+    else {
+      return 'Make Sure You Loged Into System First'
+    }
+
+  }
+  //RESET PASSWORD
+
+
+
 
 
 
@@ -94,7 +208,7 @@ export class AuthService {
           .createQueryBuilder()
           .select("ReqRes.status")
           .from(ReqRes, "ReqRes")
-          .where("ReqRes.senderemail=:senderemail ", { senderemail:senderemail  })
+          .where("ReqRes.senderemail=:senderemail ", { senderemail: senderemail })
           .andWhere("ReqRes.reciveremail=:reciveremail ", { reciveremail: reciveremail })
           .getOne();
         if (checkstatus.status === "accepted" || checkstatus.status === "Pending") {
@@ -121,7 +235,7 @@ export class AuthService {
           .where("ReqRes.senderemail=:senderemail ", { senderemail: reciveremail })
           .andWhere("ReqRes.reciveremail=:reciveremail ", { reciveremail: senderemail })
           .getOne();
-        
+
         if (checkstatus.status === "accepted" || checkstatus.status === "Pending") {
           return "You have already send request"
         }
@@ -139,17 +253,17 @@ export class AuthService {
           return `${senderemail} Successsfully send request to ${reciveremail}`;
         }
       }
-      else{
+      else {
         await getConnection()
-            .createQueryBuilder()
-            .insert()
-            .into(ReqRes)
-            .values({
-              senderemail: senderemail,
-              reciveremail: reciveremail,
-            })
-            .execute();
-          return `${senderemail} Successsfully send request to ${reciveremail}`;
+          .createQueryBuilder()
+          .insert()
+          .into(ReqRes)
+          .values({
+            senderemail: senderemail,
+            reciveremail: reciveremail,
+          })
+          .execute();
+        return `${senderemail} Successsfully send request to ${reciveremail}`;
       }
 
     }
@@ -192,31 +306,30 @@ export class AuthService {
     @Param('reciveremail') reciveremail: string,
     @Body() reqresdto: ReqResDto) {
     if (await User.findOne({ where: { email: reqresdto.senderemail } }) && await User.findOne({ where: { email: reciveremail } })) {
-      
+
       const checkstatus = await getConnection()
-      .createQueryBuilder()
-      .select("ReqRes.status")
-      .from(ReqRes, "ReqRes")
-      .where("ReqRes.senderemail=:senderemail ", { senderemail:reqresdto.senderemail  })
-      .andWhere("ReqRes.reciveremail=:reciveremail ", { reciveremail: reciveremail })
-      .getOne();
-      if (reqresdto.status === "rejected" ) {
-          const deleterejecteduser =  await getConnection()  
+        .createQueryBuilder()
+        .select("ReqRes.status")
+        .from(ReqRes, "ReqRes")
+        .where("ReqRes.senderemail=:senderemail ", { senderemail: reqresdto.senderemail })
+        .andWhere("ReqRes.reciveremail=:reciveremail ", { reciveremail: reciveremail })
+        .getOne();
+      if (reqresdto.status === "rejected") {
+        const deleterejecteduser = await getConnection()
           .createQueryBuilder()
           .delete()
           .from(ReqRes)
-          .where("senderemail = :senderemail", { senderemail : reqresdto.senderemail })
-          .andWhere("reciveremail = :reciveremail",{reciveremail:reciveremail})
+          .where("senderemail = :senderemail", { senderemail: reqresdto.senderemail })
+          .andWhere("reciveremail = :reciveremail", { reciveremail: reciveremail })
           .execute()
-          return {Message:`User data of ${reqresdto.senderemail} and ${reciveremail} is deleted`,deleterejecteduser}
+        return { Message: `User data of ${reqresdto.senderemail} and ${reciveremail} is deleted`, deleterejecteduser }
       }
-      else
-      {
+      else {
         const user = await getConnection()
-          .createQueryBuilder() 
+          .createQueryBuilder()
           .update(ReqRes)
           .set({
-            senderemail:reqresdto.senderemail,
+            senderemail: reqresdto.senderemail,
             status: reqresdto.status
           })
           .where("reciveremail=:reciveremail", { reciveremail: reciveremail })
