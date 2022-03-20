@@ -1,9 +1,9 @@
 import { IsEmail, IsEnum, IsNotEmpty } from 'class-validator';
 
 export class UserChatsDto {
-    
-    senderemail:string;
+
+    senderemail: string;
     reciveremail: string;
     @IsNotEmpty()
-    Message:string[];
+    Message: string[];
 }

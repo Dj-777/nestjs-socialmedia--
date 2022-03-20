@@ -1,10 +1,10 @@
 import { IsNotEmpty } from "class-validator";
 
-export class authResetPasswordDto{
+export class authResetPasswordDto {
     @IsNotEmpty()
-    password:string;
+    password: string;
 
-    access_token:string;
+    access_token: string;
 
 
 }

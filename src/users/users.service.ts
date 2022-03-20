@@ -9,97 +9,108 @@ import { Chat } from './userchats.entity';
 import { check } from 'prettier';
 import { ReqRes, Statuss } from "./reqres.entity";
 import { send } from 'process';
+import { LogInUsers } from './loginusersdetails.entity';
 @Injectable()
 export class UsersService {
-  async create(createUserDto: CreateUserDto) {
-    const checkkemail=await User.findOne({where:{email:createUserDto.email}})
-    if (checkkemail){
-      return "you are already registred with this email"  
-    }
-    else
-    {
-          const user = User.create(createUserDto);
-         await user.save();
-        delete user.password;
-        return user;
-    }
-  }
-  async showById(id: number): Promise<User> {
-    const user = await User.findOne(id);
-    delete user.password;
-    return user;
-  }
 
+  //USER REGISTRACTION
+  async create(createUserDto: CreateUserDto) {
+    const checkkemail = await User.findOne({ where: { email: createUserDto.email } })
+    if (checkkemail) {
+      return "you are already registred with this email"
+    }
+    else {
+      const user = User.create(createUserDto);
+      await user.save();
+      delete user.password;
+      return user;
+    }
+  }
+  //USER REGISTRACTION
+
+  // async showById(id: number): Promise<User> {
+  //   const user = await User.findOne(id);
+  //   delete user.password;
+  //   return user;
+  // }
+
+  //CHAT WITH USER
   async chatToUser(@Param('senderemail') senderemail: string,
     @Param('reciveremail') reciveremail: string,
     @Body() userchatsdto: UserChatsDto) {
 
     if (await User.findOne({ email: senderemail }) && await User.findOne({ email: reciveremail })) {
       if (await ReqRes.findOne({ where: { senderemail: senderemail } }) && await ReqRes.findOne({ where: { reciveremail: reciveremail } }) || await ReqRes.findOne({ where: { senderemail: reciveremail } }) && await ReqRes.findOne({ where: { reciveremail: senderemail } })) {
-        const json = await ReqRes.findOne({ where: { senderemail: senderemail } }) && await ReqRes.findOne({ where: { reciveremail: reciveremail } }) || await ReqRes.findOne({ where: { senderemail: reciveremail } }) && await ReqRes.findOne({ where: { reciveremail: senderemail } })
-        const checkstatus = await getConnection()
-          .createQueryBuilder()
-          .select("ReqRes.status")
-          .from(ReqRes, "ReqRes")
-          .where("ReqRes.senderemail=:senderemail ", { senderemail: json.senderemail || reciveremail })
-          .andWhere("ReqRes.reciveremail=:reciveremail ", { reciveremail: json.reciveremail || senderemail })
-          // .where("ReqRes.senderemail=:senderemail || ReqRes.reciveremail=:reciveremail",{senderemail:senderemail}||{reciveremail:reciveremail} )
-          // .andWhere("ReqRes.reciveremail=:reciveremail || ReqRes.senderemail=:senderemail",{reciveremail:reciveremail} ||{senderemail:reciveremail})
-          // .andWhere("ReqRes.senderemail=:senderemail",{senderemail:reciveremail})
-          // .andWhere("ReqRes.reciveremail=:reciveremail",{reciveremail:senderemail})
-          .getOne();
+        if (await LogInUsers.findOne({ where: { email: senderemail } })) {
 
-        console.log(checkstatus)
+          const json = await ReqRes.findOne({ where: { senderemail: senderemail } }) && await ReqRes.findOne({ where: { reciveremail: reciveremail } }) || await ReqRes.findOne({ where: { senderemail: reciveremail } }) && await ReqRes.findOne({ where: { reciveremail: senderemail } })
+          const checkstatus = await getConnection()
+            .createQueryBuilder()
+            .select("ReqRes.status")
+            .from(ReqRes, "ReqRes")
+            .where("ReqRes.senderemail=:senderemail ", { senderemail: json.senderemail || reciveremail })
+            .andWhere("ReqRes.reciveremail=:reciveremail ", { reciveremail: json.reciveremail || senderemail })
+            // .where("ReqRes.senderemail=:senderemail || ReqRes.reciveremail=:reciveremail",{senderemail:senderemail}||{reciveremail:reciveremail} )
+            // .andWhere("ReqRes.reciveremail=:reciveremail || ReqRes.senderemail=:senderemail",{reciveremail:reciveremail} ||{senderemail:reciveremail})
+            // .andWhere("ReqRes.senderemail=:senderemail",{senderemail:reciveremail})
+            // .andWhere("ReqRes.reciveremail=:reciveremail",{reciveremail:senderemail})
+            .getOne();
 
-        if (checkstatus.status === "accepted") {
-          if (await ReqRes.findOne({ where: { senderemail: senderemail } }) && await ReqRes.findOne({ where: { reciveremail: reciveremail } }) || await ReqRes.findOne({ where: { senderemail: reciveremail } }) && await ReqRes.findOne({ where: { reciveremail: senderemail } })) {
+          console.log(checkstatus)
 
-            if (await Chat.findOne({ where: { senderemail: senderemail } }) && await Chat.findOne({ where: { reciveremail: reciveremail } })) {
-              const checkforcjchats = await getConnection()
-                .createQueryBuilder()
-                .select("Chat.Message")
-                .from(Chat, "Chat")
-                .where("Chat.senderemail=:senderemail", { senderemail: senderemail || reciveremail })
-                .andWhere("Chat.reciveremail=:reciveremail", { reciveremail: reciveremail || senderemail })
-                .getOne();
+          if (checkstatus.status === "accepted") {
+            if (await ReqRes.findOne({ where: { senderemail: senderemail } }) && await ReqRes.findOne({ where: { reciveremail: reciveremail } }) || await ReqRes.findOne({ where: { senderemail: reciveremail } }) && await ReqRes.findOne({ where: { reciveremail: senderemail } })) {
 
-              console.log(checkforcjchats.Message)
+              if (await Chat.findOne({ where: { senderemail: senderemail } }) && await Chat.findOne({ where: { reciveremail: reciveremail } })) {
+                const checkforcjchats = await getConnection()
+                  .createQueryBuilder()
+                  .select("Chat.Message")
+                  .from(Chat, "Chat")
+                  .where("Chat.senderemail=:senderemail", { senderemail: senderemail || reciveremail })
+                  .andWhere("Chat.reciveremail=:reciveremail", { reciveremail: reciveremail || senderemail })
+                  .getOne();
 
-              const addPreviousplusNewMessage = checkforcjchats.Message.concat(userchatsdto.Message)
-              console.log(addPreviousplusNewMessage)
-              const user = await getConnection()
-                .createQueryBuilder()
-                .update(Chat)
-                .set({
-                  Message: addPreviousplusNewMessage
-                })
-                .where("senderemail=:senderemail", { senderemail: senderemail })
-                .andWhere("reciveremail=:reciveremail", { reciveremail: reciveremail })
-                .execute();
-              return `${senderemail} message to ${reciveremail} is :-- ${userchatsdto.Message}`
-            }
-            else {
-              const user = await getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(Chat)
-                .values({
-                  senderemail: senderemail,
-                  reciveremail: reciveremail,
-                  Message: userchatsdto.Message
-                })
+                console.log(checkforcjchats.Message)
 
-                .execute();
-              return `${senderemail} Message to ${reciveremail} is -->${userchatsdto.Message}`
+                const addPreviousplusNewMessage = checkforcjchats.Message.concat(userchatsdto.Message)
+                console.log(addPreviousplusNewMessage)
+                const user = await getConnection()
+                  .createQueryBuilder()
+                  .update(Chat)
+                  .set({
+                    Message: addPreviousplusNewMessage
+                  })
+                  .where("senderemail=:senderemail", { senderemail: senderemail })
+                  .andWhere("reciveremail=:reciveremail", { reciveremail: reciveremail })
+                  .execute();
+                return `${senderemail} message to ${reciveremail} is :-- ${userchatsdto.Message}`
+              }
+              else {
+                const user = await getConnection()
+                  .createQueryBuilder()
+                  .insert()
+                  .into(Chat)
+                  .values({
+                    senderemail: senderemail,
+                    reciveremail: reciveremail,
+                    Message: userchatsdto.Message
+                  })
+
+                  .execute();
+                return `${senderemail} Message to ${reciveremail} is -->${userchatsdto.Message}`
+
+              }
 
             }
 
           }
-
+          else {
+            console.log("not same")
+            return { Message: 'Request may be in Pending State or May Be Rejected By the User' }
+          }
         }
         else {
-          console.log("not same")
-          return { Message: 'Request may be in Pending State or May Be Rejected By the User' }
+          return "For Sending the messages you must have to login into system"
         }
       }
       else {
@@ -110,13 +121,11 @@ export class UsersService {
     else {
       console.log("User is not registered")
     }
-
-
-
   }
+
+  //CHAT WITH USER
+
 }
-
-
 
 // async resetpassword(id: number,@Body() authResetPasswordDtos:authResetPasswordDto) {
 //   const hashPassword=await bcrypt.hash(authResetPasswordDtos.password,8)

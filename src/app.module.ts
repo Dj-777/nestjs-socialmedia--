@@ -10,7 +10,7 @@ import { ReqRes } from './users/reqres.entity';
 import { Chat } from './users/userchats.entity';
 import { LogInUsers } from './users/loginusersdetails.entity';
 import { ForgetPassword } from './users/forgetpassword.entity';
-const entities = [User,ReqRes,Chat,LogInUsers,ForgetPassword];
+const entities = [User, ReqRes, Chat, LogInUsers, ForgetPassword];
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,4 +33,4 @@ const entities = [User,ReqRes,Chat,LogInUsers,ForgetPassword];
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
