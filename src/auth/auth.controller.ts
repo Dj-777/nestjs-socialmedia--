@@ -8,19 +8,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CreateUserDto } from 'src/users/dto/user.dto';
 import { AuthService } from './auth.service';
 import { AuthLoginDto } from './dto/auth-login.dto';
 import { authResetPasswordDto } from './dto/auth-resetpassword.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import * as bcrypt from "bcrypt"
 import { JwtStrategy } from './jwt.strategy';
-import { User } from 'src/users/user.entity';
 import { ReqResDto } from 'src/users/dto/reqres.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   //LOGIN
   @Post('login')
@@ -42,13 +39,19 @@ export class AuthController {
 
   //FORGETPASSWORD
   @Post('forgetpassword/:email')
-  async forgetpassword(@Param('email') email: string, @Body() authResetPasswordDto: authResetPasswordDto) {
-    return this.authService.forgetpassword(email, authResetPasswordDto)
+  async forgetpassword(
+    @Param('email') email: string,
+    @Body() authResetPasswordDto: authResetPasswordDto,
+  ) {
+    return this.authService.forgetpassword(email, authResetPasswordDto);
   }
 
   //RESETPASSWORD
   @Patch('resetpassword/:email')
-  async updatepass(@Param('email') email: string, @Body() authResetPasswordDtos: authResetPasswordDto) {
+  async updatepass(
+    @Param('email') email: string,
+    @Body() authResetPasswordDtos: authResetPasswordDto,
+  ) {
     return await this.authService.resetpassword(email, authResetPasswordDtos);
   }
 
@@ -62,26 +65,34 @@ export class AuthController {
 
   //SENDREQUEST
   @Post('sendrequest/:senderemail/:reciveremail')
-  async sendRequest(@Param('senderemail') senderemail: string, @Param('reciveremail') reciveremail: string) {
+  async sendRequest(
+    @Param('senderemail') senderemail: string,
+    @Param('reciveremail') reciveremail: string,
+  ) {
     return await this.authService.request(senderemail, reciveremail);
   }
 
   //SHOW REQUEST
   @Get('showrequest/:email')
-  async showRequest(@Param('email') email: string, @Body() reqresdto: ReqResDto) {
-    return await this.authService.showRequest(email, reqresdto)
+  async showRequest(
+    @Param('email') email: string,
+    @Body() reqresdto: ReqResDto,
+  ) {
+    return await this.authService.showRequest(email, reqresdto);
   }
 
   //REQUESTSTATUS
   @Patch('requeststatus/:reciveremail/')
-  async requestStaus(@Param('reciveremail') reciveremail: string, @Body() reqresdto: ReqResDto) {
-    return await this.authService.requestStatus(reciveremail, reqresdto)
+  async requestStaus(
+    @Param('reciveremail') reciveremail: string,
+    @Body() reqresdto: ReqResDto,
+  ) {
+    return await this.authService.requestStatus(reciveremail, reqresdto);
   }
 
   //SHOWFRIENDS
   @Get('showfriends/:email')
   async ShowFriends(@Param('email') email: string) {
-    return await this.authService.ShowFriends(email)
+    return await this.authService.ShowFriends(email);
   }
-
 }

@@ -1,10 +1,8 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty } from 'class-validator';
 
 export class authResetPasswordDto {
-    @IsNotEmpty()
-    password: string;
+  @IsNotEmpty()
+  password: string;
 
-    access_token: string;
-
-
+  access_token: string;
 }
